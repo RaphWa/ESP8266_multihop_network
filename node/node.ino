@@ -155,6 +155,7 @@ data_packet create_new_data_packet(int max_hops, String addr, float mes) {
 
 /**
  * Creates a new object of the struct data_packet and transmits it to the broadcast_address.
+ * Prints out feedback.
  * 
  * @param max_hops maximum of hops the new data_packet can do
  * @param addr_name the addressee of the new data_packet, should be a MODUL_NAME of a different module

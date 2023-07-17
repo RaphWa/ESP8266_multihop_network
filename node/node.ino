@@ -153,14 +153,33 @@ data_packet create_new_data_packet(int max_hops, String addr, float mes) {
   return pkt;
 }
 
-void transmit_new_data_packet(int max_hops, String addr, float mes) {
+/**
+ * Creates a new object of the struct data_packet and transmits it to the broadcast_address.
+ * 
+ * @param max_hops maximum of hops the new data_packet can do
+ * @param addr_name the addressee of the new data_packet, should be a MODUL_NAME of a different module
+ * @param mes the message of the new data_packet which will be transmitted
+ */
+void transmit_new_data_packet(int max_hops, String addr_name, float mes) {
   long new_message_id = random(1, 2111222333);
   int hops_counter_at_the_beginning = 0;
-  float new_message = random(10.0, 31.0);
 
-  data_packet pkt = {new_message_id, max_hops, hops_counter_at_the_beginning, addr, mes};
+  data_packet pkt = {new_message_id, max_hops, hops_counter_at_the_beginning, addr_name, mes};
 
-  // more code needed
+  Serial.println("-----");
+
+  Serial.println("Trying to transmit new data_packet... ");
+  transmit_data_packet(pkt, true);
+  Serial.println("New data_packet transmitted!");
+
+  Serial.print("Transmitted message: ");
+  Serial.println(mes);
+
+  digitalWrite(NODEMCU_LED, HIGH);
+  delay(DELAY_LED_BLINKEN);
+  digitalWrite(NODEMCU_LED, LOW);
+
+  Serial.println("-----");
 }
 
 /**
@@ -212,6 +231,9 @@ void if_data_packet_received(uint8_t* addr, uint8_t* data, uint8_t received_byte
   }
 }
 
+/**
+ * Sets up the module on which this code is running.
+ */
 void setup() {
   WiFi.mode(WIFI_STA);
 
@@ -233,28 +255,18 @@ void setup() {
   esp_now_add_peer(broadcast_address, ESP_NOW_ROLE_SLAVE, 1, NULL, 0);
 }
 
+/**
+ * Can transmit a new data_packet every DISTANCE_BETWEEN_TRANSMITTING_DATA_PACKETS
+ * milliseconds to the broadcast_address.
+ */
 void loop() {
   unsigned long difference = millis() - old_millis;
 
   if (difference == DISTANCE_BETWEEN_TRANSMITTING_DATA_PACKETS) {
     float new_message = random(10.0, 31.0);
-     
-    data_packet new_packet = create_new_data_packet(10, "G001", new_message);
+
+    transmit_new_data_packet(10, "G001", new_message);
+
     old_millis = millis();
-
-    Serial.println("-----");
-
-    Serial.println("Trying to transmit new data_packet... ");
-    transmit_data_packet(new_packet, true);
-    Serial.println("New data_packet transmitted!");
-
-    Serial.print("Transmitted message: ");
-    Serial.println(new_message);
-
-    digitalWrite(NODEMCU_LED, HIGH);
-    delay(DELAY_LED_BLINKEN);
-    digitalWrite(NODEMCU_LED, LOW);
-
-    Serial.println("-----");
   }
 }

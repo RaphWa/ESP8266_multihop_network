@@ -22,7 +22,7 @@ uint8_t broadcast_address[] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
 // the sructure of the received and transmitted data packet
 struct data_packet {
   unsigned long message_id;
-  unsigned int max_hop;
+  unsigned int max_hops;
   unsigned int hop_counter;
   String addressee;
   float message;
@@ -64,13 +64,13 @@ bool is_message_id_known(int id) {
 }
 
 /**
- * Checks if hop_counter is greater or equal to max_hop of the given data_packet
+ * Checks if hop_counter is greater or equal to max_hops of the given data_packet
  * 
  * @param pkt data_packet, which needs to be checked
- * @return pkt.max_hop <= pkt.hop_counter
+ * @return pkt.max_hops <= pkt.hop_counter
  */
-bool is_max_hop_reached(data_packet pkt) {
-  return pkt.max_hop <= pkt.hop_counter;
+bool is_max_hops_reached(data_packet pkt) {
+  return pkt.max_hops <= pkt.hop_counter;
 }
 
 /**
@@ -107,7 +107,7 @@ bool is_data_packet_allowed_to_be_transmitted(data_packet pkt) {
   bool result = false;
 
   bool id_is_know = is_message_id_known(pkt.message_id);
-  bool max_hops_reached = is_max_hop_reached(pkt);
+  bool max_hops_reached = is_max_hops_reached(pkt);
   bool is_modul_addressee = is_this_module_addressee_of_data_packet(pkt.addressee);
 
   if (not id_is_know and not max_hops_reached and not is_modul_addressee) {
@@ -151,6 +151,16 @@ data_packet create_new_data_packet(int max_hops, String addr, float mes) {
   data_packet pkt = {new_message_id, max_hops, hops_counter_at_the_beginning, addr, mes};
 
   return pkt;
+}
+
+void transmit_new_data_packet(int max_hops, String addr, float mes) {
+  long new_message_id = random(1, 2111222333);
+  int hops_counter_at_the_beginning = 0;
+  float new_message = random(10.0, 31.0);
+
+  data_packet pkt = {new_message_id, max_hops, hops_counter_at_the_beginning, addr, mes};
+
+  // more code needed
 }
 
 /**

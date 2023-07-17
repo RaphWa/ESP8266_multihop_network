@@ -10,6 +10,10 @@ const int MAX_LENGTH_MESSAGE_ID_ARR = 100;
 long message_id_arr[MAX_LENGTH_MESSAGE_ID_ARR];
 int message_id_arr_index_counter = 0;
 
+// to emulate parallel working
+const unsigned long DISTANCE_BETWEEN_TRANSMITTING_DATA_PACKETS = 2000; // in milliseconds
+unsigned long old_millis = 0;
+
 // other constants and variables
 const int DELAY_LED_BLINKEN = 50;  // in milliseconds
 const String MODUL_NAME = "N000001";  // the name of this modul, it is a equivalent to an ip address
@@ -117,16 +121,36 @@ bool is_data_packet_allowed_to_be_transmitted(data_packet pkt) {
  * Transmitts the given data_packet to the broadcast_address.
  * 
  * @param pkt data_packet which needs to be transmitted
+ * @param pkt_is_new if true the hop_counter will not be counted up, otherwise it will be counted up
  */
-void transmit_data_packet(data_packet pkt) {
+void transmit_data_packet(data_packet pkt, bool pkt_is_new) {
   // prepare data_packet
-  pkt.hop_counter = pkt.hop_counter + 1;
+  if (not pkt_is_new){
+    pkt.hop_counter = pkt.hop_counter + 1;
+  }
   store_message_id(pkt.message_id);
 
   // transmit data_packet
   esp_now_set_self_role(ESP_NOW_ROLE_CONTROLLER);
   esp_now_send(broadcast_address, (uint8_t*)&pkt, sizeof(pkt));
   esp_now_set_self_role(ESP_NOW_ROLE_SLAVE);
+}
+
+/**
+ * Returns a new object of the struct data_packet and sets a message_id
+ * 
+ * @param max_hops maximum of hops the new data_packet can do
+ * @param addr the addressee of the new data_packet 
+ * @param mes the message of the new data_packet
+ * @return new data_packet object
+ */
+data_packet create_new_data_packet(int max_hops, String addr, float mes) {
+  long new_message_id = random(1, 2111222333);
+  int hops_counter_at_the_beginning = 0;
+
+  data_packet pkt = {new_message_id, max_hops, hops_counter_at_the_beginning, addr, mes};
+
+  return pkt;
 }
 
 /**
@@ -170,7 +194,7 @@ void if_data_packet_received(uint8_t* addr, uint8_t* data, uint8_t received_byte
 
   if (is_data_packet_allowed_to_be_transmitted(packet)) {
     Serial.println("Trying to transmit... ");
-    transmit_data_packet(packet);
+    transmit_data_packet(packet, false);
     Serial.println("Transmitted!");
     digitalWrite(NODEMCU_LED, HIGH);
     delay(DELAY_LED_BLINKEN);
@@ -200,4 +224,27 @@ void setup() {
 }
 
 void loop() {
+  unsigned long difference = millis() - old_millis;
+
+  if (difference == DISTANCE_BETWEEN_TRANSMITTING_DATA_PACKETS) {
+    float new_message = random(10.0, 31.0);
+     
+    data_packet new_packet = create_new_data_packet(10, "G001", new_message);
+    old_millis = millis();
+
+    Serial.println("-----");
+
+    Serial.println("Trying to transmit new data_packet... ");
+    transmit_data_packet(new_packet, true);
+    Serial.println("New data_packet transmitted!");
+
+    Serial.print("Transmitted message: ");
+    Serial.println(new_message);
+
+    digitalWrite(NODEMCU_LED, HIGH);
+    delay(DELAY_LED_BLINKEN);
+    digitalWrite(NODEMCU_LED, LOW);
+
+    Serial.println("-----");
+  }
 }

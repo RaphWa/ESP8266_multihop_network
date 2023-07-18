@@ -2,8 +2,8 @@
 #include <espnow.h>
 
 // pins
-const int ESP8266_LED = 2;   // LED des ESP8266
-const int NODEMCU_LED = 16;  // LED des NodeMCU
+const int ESP8266_LED = 2;   // LED of ESP8266
+const int NODEMCU_LED = 16;  // LED of NodeMCU
 
 // to keep track of known data_packet IDs
 const int MAX_LENGTH_DATA_PACKET_ID_ARR = 100;

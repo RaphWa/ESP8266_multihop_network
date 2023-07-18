@@ -5,55 +5,61 @@
 const int ESP8266_LED = 2;   // LED des ESP8266
 const int NODEMCU_LED = 16;  // LED des NodeMCU
 
-// to keep track of known message IDs
-const int MAX_LENGTH_MESSAGE_ID_ARR = 100;
-long message_id_arr[MAX_LENGTH_MESSAGE_ID_ARR];
-int message_id_arr_index_counter = 0;
+// to keep track of known data_packet IDs
+const int MAX_LENGTH_DATA_PACKET_ID_ARR = 100;
+long data_packet_id_arr[MAX_LENGTH_DATA_PACKET_ID_ARR];
+int data_packet_id_arr_index_counter = 0;
 
 // to emulate parallel working
-const unsigned long DISTANCE_BETWEEN_TRANSMITTING_DATA_PACKETS = 2000; // in milliseconds
+const unsigned long DISTANCE_BETWEEN_TRANSMITTING_DATA_PACKETS = 2000;  // in milliseconds
 unsigned long old_millis = 0;
 
 // other constants and variables
 const int DELAY_LED_BLINKEN = 50;  // in milliseconds
-const String MODUL_NAME = "N01";  // the name of this modul, it is a equivalent to an ip address
+const String MODUL_NAME = "N01";   // the name of this modul, it is a equivalent to an ip address
 uint8_t broadcast_address[] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
 
-// the sructure of the received and transmitted data packet
+// the structure of the payload of a data_packet
+struct payload_struct {
+  float temp;  // temperature
+  float hum;   // humidity
+};
+
+// the sructure of the received and transmitted data_packet
 struct data_packet {
-  unsigned long message_id;
+  unsigned long data_packet_id;
   String sender;
   String addressee;
-  float message;
+  payload_struct payload;
 };
 data_packet packet;  // the received data_packet, which may be transmitted
 
 
 /**
- * Stores the given message id.
+ * Stores the given data_packet id.
  * 
- * @param id message id, which needs to be stored
+ * @param id data_packet id, which needs to be stored
  */
-void store_message_id(int id) {
-  if (message_id_arr_index_counter == MAX_LENGTH_MESSAGE_ID_ARR) {
-    message_id_arr_index_counter = 0;
+void store_data_packet_id(int id) {
+  if (data_packet_id_arr_index_counter == MAX_LENGTH_DATA_PACKET_ID_ARR) {
+    data_packet_id_arr_index_counter = 0;
   }
 
-  message_id_arr[message_id_arr_index_counter] = id;
-  message_id_arr_index_counter++;
+  data_packet_id_arr[data_packet_id_arr_index_counter] = id;
+  data_packet_id_arr_index_counter++;
 }
 
 /**
- * Checks, if the given message id is known.
+ * Checks, if the given data_packet id is known.
  * 
- * @param id message id, which may be known
- * @return true if given message id is known, otherwise false
+ * @param id data_packet id, which may be known
+ * @return true if given data_packet id is known, otherwise false
  */
-bool is_message_id_known(int id) {
+bool is_data_packet_id_known(int id) {
   bool result = false;
 
-  for (int i = 0; i < MAX_LENGTH_MESSAGE_ID_ARR; i++) {
-    if (message_id_arr[i] == id) {
+  for (int i = 0; i < MAX_LENGTH_DATA_PACKET_ID_ARR; i++) {
+    if (data_packet_id_arr[i] == id) {
       result = true;
       break;
     }
@@ -95,7 +101,7 @@ bool is_this_module_addressee_of_data_packet(String addressee_of_pkt) {
 bool is_data_packet_allowed_to_be_transmitted(data_packet pkt) {
   bool result = false;
 
-  bool id_is_know = is_message_id_known(pkt.message_id);
+  bool id_is_know = is_data_packet_id_known(pkt.data_packet_id);
   bool is_modul_addressee = is_this_module_addressee_of_data_packet(pkt.addressee);
 
   if (not id_is_know and not is_modul_addressee) {
@@ -111,7 +117,7 @@ bool is_data_packet_allowed_to_be_transmitted(data_packet pkt) {
  * @param pkt data_packet which needs to be transmitted
  */
 void transmit_data_packet(data_packet pkt) {
-  store_message_id(pkt.message_id);
+  store_data_packet_id(pkt.data_packet_id);
 
   // transmit data_packet
   esp_now_set_self_role(ESP_NOW_ROLE_CONTROLLER);
@@ -124,12 +130,12 @@ void transmit_data_packet(data_packet pkt) {
  * Prints out feedback.
  * 
  * @param addr_name the addressee of the new data_packet, should be a MODUL_NAME of a different module
- * @param mes the message of the new data_packet which will be transmitted
+ * @param pyld the payload of the new data_packet which will be transmitted
  */
-void transmit_new_data_packet(String addr_name, float mes) {
-  long new_message_id = random(1, 2111222333);
+void transmit_new_data_packet(String addr_name, float pyld) {
+  long new_data_packet_id = random(1, 2111222333);
 
-  data_packet pkt = {new_message_id, MODUL_NAME, addr_name, mes};
+  data_packet pkt = { new_data_packet_id, MODUL_NAME, addr_name, pyld };
 
   Serial.println("-----");
 
@@ -137,8 +143,8 @@ void transmit_new_data_packet(String addr_name, float mes) {
   transmit_data_packet(pkt);
   Serial.println("New data_packet transmitted!");
 
-  Serial.print("Transmitted message: ");
-  Serial.println(mes);
+  Serial.print("Transmitted payload: ");
+  Serial.println(pyld);
 
   digitalWrite(NODEMCU_LED, HIGH);
   delay(DELAY_LED_BLINKEN);
@@ -179,10 +185,12 @@ void if_data_packet_received(uint8_t* addr, uint8_t* data, uint8_t received_byte
   Serial.println("-----------------------------");
   Serial.print("Received bytes: ");
   Serial.println(received_bytes);
-  Serial.print("The message ID: ");
-  Serial.println(packet.message_id);
-  Serial.print("Received message: ");
-  Serial.println(packet.message);
+  Serial.print("Received payload: ");
+  Serial.print("Temp: ");
+  Serial.print(packet.payload.temp);
+  Serial.print("C, Hum: ");
+  Serial.print(packet.payload.hum);
+  Serial.println("%");
   delay(DELAY_LED_BLINKEN);
   digitalWrite(ESP8266_LED, LOW);
 
@@ -228,9 +236,9 @@ void loop() {
   unsigned long difference = millis() - old_millis;
 
   if (difference == DISTANCE_BETWEEN_TRANSMITTING_DATA_PACKETS) {
-    float new_message = random(10.0, 31.0);
+    float new_payload = random(10.0, 31.0);
 
-    transmit_new_data_packet("G01", new_message);
+    transmit_new_data_packet("G01", new_payload);
 
     old_millis = millis();
   }

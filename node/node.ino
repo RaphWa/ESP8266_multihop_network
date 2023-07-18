@@ -132,7 +132,7 @@ void transmit_data_packet(data_packet pkt) {
  * @param addr_name the addressee of the new data_packet, should be a MODUL_NAME of a different module
  * @param pyld the payload of the new data_packet which will be transmitted
  */
-void transmit_new_data_packet(String addr_name, float pyld) {
+void transmit_new_data_packet(String addr_name, payload_struct pyld) {
   long new_data_packet_id = random(1, 2111222333);
 
   data_packet pkt = { new_data_packet_id, MODUL_NAME, addr_name, pyld };
@@ -143,8 +143,12 @@ void transmit_new_data_packet(String addr_name, float pyld) {
   transmit_data_packet(pkt);
   Serial.println("New data_packet transmitted!");
 
-  Serial.print("Transmitted payload: ");
-  Serial.println(pyld);
+  Serial.println("Transmitted payload: ");
+  Serial.print("Temp: ");
+  Serial.print(pkt.payload.temp);
+  Serial.print("C, Hum: ");
+  Serial.print(pkt.payload.hum);
+  Serial.println("%");
 
   digitalWrite(NODEMCU_LED, HIGH);
   delay(DELAY_LED_BLINKEN);
@@ -185,7 +189,7 @@ void if_data_packet_received(uint8_t* addr, uint8_t* data, uint8_t received_byte
   Serial.println("-----------------------------");
   Serial.print("Received bytes: ");
   Serial.println(received_bytes);
-  Serial.print("Received payload: ");
+  Serial.println("Received payload: ");
   Serial.print("Temp: ");
   Serial.print(packet.payload.temp);
   Serial.print("C, Hum: ");
@@ -236,9 +240,12 @@ void loop() {
   unsigned long difference = millis() - old_millis;
 
   if (difference == DISTANCE_BETWEEN_TRANSMITTING_DATA_PACKETS) {
-    float new_payload = random(10.0, 31.0);
+    float new_temp = random(10.0, 31.0);
+    float new_hum = random(35.0, 71.0);
 
-    transmit_new_data_packet("G01", new_payload);
+    payload_struct new_pyld = { new_temp, new_hum };
+
+    //transmit_new_data_packet("G01", new_pyld);
 
     old_millis = millis();
   }

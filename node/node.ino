@@ -22,6 +22,7 @@ uint8_t broadcast_address[] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
 // the sructure of the received and transmitted data packet
 struct data_packet {
   unsigned long message_id;
+  String sender;
   String addressee;
   float message;
 };
@@ -128,7 +129,7 @@ void transmit_data_packet(data_packet pkt) {
 void transmit_new_data_packet(String addr_name, float mes) {
   long new_message_id = random(1, 2111222333);
 
-  data_packet pkt = {new_message_id, addr_name, mes};
+  data_packet pkt = {new_message_id, MODUL_NAME, addr_name, mes};
 
   Serial.println("-----");
 

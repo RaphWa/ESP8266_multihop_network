@@ -1,5 +1,8 @@
 #include <ESP8266WiFi.h>
 #include <espnow.h>
+#include <LiquidCrystal_I2C.h>
+
+LiquidCrystal_I2C lcd(0x27,16,2);
 
 // pins
 const int ESP8266_LED = 2;   // LED of ESP8266
@@ -107,8 +110,18 @@ void if_data_packet_received(uint8_t* addr, uint8_t* data, uint8_t received_byte
   if (is_this_module_addressee_of_data_packet(packet.addressee) and not is_data_packet_id_known(packet.data_packet_id)) {
     store_data_packet_id(packet.data_packet_id);
 
-    Serial.println(packet.sender);
-    // show received data
+    lcd.clear();
+
+    lcd.setCursor(0, 0);
+    lcd.print("S: ");
+    lcd.print(packet.sender);
+
+    lcd.setCursor(0, 1);
+    lcd.print("T:");
+    lcd.print(packet.payload.temp);
+    lcd.print("  ");
+    lcd.print("H:");
+    lcd.print(packet.payload.hum);
   }
 }
 
@@ -116,6 +129,10 @@ void if_data_packet_received(uint8_t* addr, uint8_t* data, uint8_t received_byte
  * Sets up the module on which this code is running.
  */
 void setup() {
+  lcd.init();
+  lcd.clear();         
+  lcd.backlight();
+
   WiFi.mode(WIFI_STA);
 
   // needed in order to give feedback
@@ -133,6 +150,11 @@ void setup() {
   esp_now_set_self_role(ESP_NOW_ROLE_SLAVE);
   esp_now_register_recv_cb(if_data_packet_received);
   esp_now_add_peer(broadcast_address, ESP_NOW_ROLE_SLAVE, 1, NULL, 0);
+
+  lcd.setCursor(0, 0);
+  lcd.print("Set up finished.");
+  lcd.setCursor(0, 1);
+  lcd.print("Waiting.........");
 }
 
 /**

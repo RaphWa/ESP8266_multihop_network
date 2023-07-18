@@ -16,14 +16,12 @@ unsigned long old_millis = 0;
 
 // other constants and variables
 const int DELAY_LED_BLINKEN = 50;  // in milliseconds
-const String MODUL_NAME = "N000001";  // the name of this modul, it is a equivalent to an ip address
+const String MODUL_NAME = "N01";  // the name of this modul, it is a equivalent to an ip address
 uint8_t broadcast_address[] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
 
 // the sructure of the received and transmitted data packet
 struct data_packet {
   unsigned long message_id;
-  unsigned int max_hops;
-  unsigned int hop_counter;
   String addressee;
   float message;
 };
@@ -64,16 +62,6 @@ bool is_message_id_known(int id) {
 }
 
 /**
- * Checks if hop_counter is greater or equal to max_hops of the given data_packet
- * 
- * @param pkt data_packet, which needs to be checked
- * @return pkt.max_hops <= pkt.hop_counter
- */
-bool is_max_hops_reached(data_packet pkt) {
-  return pkt.max_hops <= pkt.hop_counter;
-}
-
-/**
  * Checks if the given address equals MODUL_NAME or if the first and only letter of the given address 
  * equals the first letter of MODUL_NAME.
  *
@@ -107,10 +95,9 @@ bool is_data_packet_allowed_to_be_transmitted(data_packet pkt) {
   bool result = false;
 
   bool id_is_know = is_message_id_known(pkt.message_id);
-  bool max_hops_reached = is_max_hops_reached(pkt);
   bool is_modul_addressee = is_this_module_addressee_of_data_packet(pkt.addressee);
 
-  if (not id_is_know and not max_hops_reached and not is_modul_addressee) {
+  if (not id_is_know and not is_modul_addressee) {
     result = true;
   }
 
@@ -121,13 +108,8 @@ bool is_data_packet_allowed_to_be_transmitted(data_packet pkt) {
  * Transmitts the given data_packet to the broadcast_address.
  * 
  * @param pkt data_packet which needs to be transmitted
- * @param pkt_is_new if true the hop_counter will not be counted up, otherwise it will be counted up
  */
-void transmit_data_packet(data_packet pkt, bool pkt_is_new) {
-  // prepare data_packet
-  if (not pkt_is_new){
-    pkt.hop_counter = pkt.hop_counter + 1;
-  }
+void transmit_data_packet(data_packet pkt) {
   store_message_id(pkt.message_id);
 
   // transmit data_packet
@@ -137,40 +119,21 @@ void transmit_data_packet(data_packet pkt, bool pkt_is_new) {
 }
 
 /**
- * Returns a new object of the struct data_packet and sets a message_id
- * 
- * @param max_hops maximum of hops the new data_packet can do
- * @param addr the addressee of the new data_packet 
- * @param mes the message of the new data_packet
- * @return new data_packet object
- */
-data_packet create_new_data_packet(int max_hops, String addr, float mes) {
-  long new_message_id = random(1, 2111222333);
-  int hops_counter_at_the_beginning = 0;
-
-  data_packet pkt = {new_message_id, max_hops, hops_counter_at_the_beginning, addr, mes};
-
-  return pkt;
-}
-
-/**
  * Creates a new object of the struct data_packet and transmits it to the broadcast_address.
  * Prints out feedback.
  * 
- * @param max_hops maximum of hops the new data_packet can do
  * @param addr_name the addressee of the new data_packet, should be a MODUL_NAME of a different module
  * @param mes the message of the new data_packet which will be transmitted
  */
-void transmit_new_data_packet(int max_hops, String addr_name, float mes) {
+void transmit_new_data_packet(String addr_name, float mes) {
   long new_message_id = random(1, 2111222333);
-  int hops_counter_at_the_beginning = 0;
 
-  data_packet pkt = {new_message_id, max_hops, hops_counter_at_the_beginning, addr_name, mes};
+  data_packet pkt = {new_message_id, addr_name, mes};
 
   Serial.println("-----");
 
   Serial.println("Trying to transmit new data_packet... ");
-  transmit_data_packet(pkt, true);
+  transmit_data_packet(pkt);
   Serial.println("New data_packet transmitted!");
 
   Serial.print("Transmitted message: ");
@@ -224,7 +187,7 @@ void if_data_packet_received(uint8_t* addr, uint8_t* data, uint8_t received_byte
 
   if (is_data_packet_allowed_to_be_transmitted(packet)) {
     Serial.println("Trying to transmit... ");
-    transmit_data_packet(packet, false);
+    transmit_data_packet(packet);
     Serial.println("Transmitted!");
     digitalWrite(NODEMCU_LED, HIGH);
     delay(DELAY_LED_BLINKEN);
@@ -266,7 +229,7 @@ void loop() {
   if (difference == DISTANCE_BETWEEN_TRANSMITTING_DATA_PACKETS) {
     float new_message = random(10.0, 31.0);
 
-    transmit_new_data_packet(10, "G001", new_message);
+    transmit_new_data_packet("G01", new_message);
 
     old_millis = millis();
   }

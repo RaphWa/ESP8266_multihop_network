@@ -40,7 +40,7 @@ data_packet packet;  // the received data_packet, which may be transmitted
  * 
  * @param id data_packet id, which needs to be stored
  */
-void store_data_packet_id(int id) {
+void store_data_packet_id(long id) {
   if (data_packet_id_arr_index_counter == MAX_LENGTH_DATA_PACKET_ID_ARR) {
     data_packet_id_arr_index_counter = 0;
   }

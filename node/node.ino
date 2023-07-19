@@ -212,8 +212,6 @@ void if_data_packet_received(uint8_t* addr, uint8_t* data, uint8_t received_byte
  * Sets up the module on which this code is running.
  */
 void setup() {
-  randomSeed(1); // seed should vary between nodes
-
   WiFi.mode(WIFI_STA);
 
   // needed in order to give feedback
@@ -240,9 +238,8 @@ void setup() {
  */
 void loop() {
   unsigned long difference = millis() - old_millis;
-  long needed_distance = MINIMUM_DISTANCE_BETWEEN_TRANSMITTING_DATA_PACKETS + random(50, 2001);
 
-  if (difference == needed_distance) {
+  if (difference == MINIMUM_DISTANCE_BETWEEN_TRANSMITTING_DATA_PACKETS) {
     float new_temp = random(10.0, 31.0);
     float new_hum = random(35.0, 71.0);
     

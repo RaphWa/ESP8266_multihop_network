@@ -2,7 +2,7 @@
 #include <espnow.h>
 #include <LiquidCrystal_I2C.h>
 
-LiquidCrystal_I2C lcd(0x27,16,2);
+LiquidCrystal_I2C lcd(0x27, 16, 2);
 
 // pins
 const int ESP8266_LED = 2;   // LED of ESP8266
@@ -42,7 +42,7 @@ struct screen {
   String sender;
   payload_struct payload;
 };
-const int LENGTH_OF_SCREEN_ARR = 4; // number of different screens, which equals the number of nodes from which some of the transmitted data will be stored
+const int LENGTH_OF_SCREEN_ARR = 4;  // number of different screens, which equals the number of nodes from which some of the transmitted data will be stored
 screen screen_arr[LENGTH_OF_SCREEN_ARR];
 int screen_arr_index_counter_free_space_in_arr = 0;
 int screen_arr_index_counter = 0;
@@ -113,7 +113,7 @@ bool is_this_module_addressee_of_data_packet(String addressee_of_pkt) {
 int get_index_of_screen_in_screen_arr_from_sender(String sen) {
   int result = -1;
 
-  for (int i=0; i < LENGTH_OF_SCREEN_ARR; i++) {
+  for (int i = 0; i < LENGTH_OF_SCREEN_ARR; i++) {
     if (screen_arr[i].sender == sen) {
       result = i;
       break;
@@ -132,13 +132,12 @@ int get_index_of_screen_in_screen_arr_from_sender(String sen) {
 void store_data_from_data_packet_to_screen_arr(data_packet pkt) {
   int index_in_screen_arr = get_index_of_screen_in_screen_arr_from_sender(pkt.sender);
 
-  if(index_in_screen_arr != -1) { // if sender is already known
+  if (index_in_screen_arr != -1) {  // if sender is already known
     screen_arr[index_in_screen_arr].payload.temp = pkt.payload.temp;
     screen_arr[index_in_screen_arr].payload.hum = pkt.payload.hum;
-    
-  }
-  else if(screen_arr_index_counter_free_space_in_arr != LENGTH_OF_SCREEN_ARR) { // if sender is new and the screen_arr is not full
-    screen_arr[screen_arr_index_counter_free_space_in_arr].sender =  pkt.sender;
+
+  } else if (screen_arr_index_counter_free_space_in_arr != LENGTH_OF_SCREEN_ARR) {  // if sender is new and the screen_arr is not full
+    screen_arr[screen_arr_index_counter_free_space_in_arr].sender = pkt.sender;
     screen_arr[screen_arr_index_counter_free_space_in_arr].payload.temp = pkt.payload.temp;
     screen_arr[screen_arr_index_counter_free_space_in_arr].payload.hum = pkt.payload.hum;
 
@@ -173,25 +172,20 @@ void show_lcd_screen_of_a_payload(int index_of_screen_content) {
  * Shows the next screen on the i2c lcd screen.
  */
 void show_next_screen() {
-  if (screen_arr_index_counter == LENGTH_OF_SCREEN_ARR){
+  if (screen_arr_index_counter == LENGTH_OF_SCREEN_ARR) {
     screen_arr_index_counter = 0;
   }
 
-  if (screen_arr_index_counter < screen_arr_index_counter_free_space_in_arr){
+  if (screen_arr_index_counter < screen_arr_index_counter_free_space_in_arr) {
     show_lcd_screen_of_a_payload(screen_arr_index_counter);
     screen_arr_index_counter++;
-  }
-  else{ // start from the beginning if all non free spaces have been shown
+  } else {  // start from the beginning if all non free spaces have been shown
     screen_arr_index_counter = 0;
-    if (screen_arr[0].sender != "") { //if first entry is not empty
+    if (screen_arr[0].sender != "") {  //if first entry is not empty
       show_lcd_screen_of_a_payload(screen_arr_index_counter);
       screen_arr_index_counter++;
     }
   }
-  Serial.print("screen_arr_index_counter: ");
-  Serial.println(screen_arr_index_counter);
-  Serial.print("screen_arr_index_counter_free_space_in_arr: ");
-  Serial.println(screen_arr_index_counter_free_space_in_arr);
 }
 
 /**
@@ -222,7 +216,7 @@ void if_data_packet_received(uint8_t* addr, uint8_t* data, uint8_t received_byte
  */
 void setup() {
   lcd.init();
-  lcd.clear();         
+  lcd.clear();
   lcd.backlight();
 
   WiFi.mode(WIFI_STA);
@@ -250,14 +244,14 @@ void setup() {
 }
 
 /**
- * Loops through all screens.
+ * Loops through all available screens.
  */
 void loop() {
   unsigned long difference = millis() - old_millis;
 
   if (difference == MINIMUM_DISTANCE_BETWEEN_SCREENS) {
     show_next_screen();
-    
+
     old_millis = millis();
   }
 }

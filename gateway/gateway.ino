@@ -40,7 +40,6 @@ struct screen {
 };
 const int LENGTH_OF_SCREEN_ARR = 4; // number of different screens, which equals the number of nodes from which some of the transmitted data will be stored
 screen screen_arr[LENGTH_OF_SCREEN_ARR];
-int screen_arr_index_counter_rotary_encoder = 0;
 int screen_arr_index_counter_free_space_in_arr = 0;
 
 /**

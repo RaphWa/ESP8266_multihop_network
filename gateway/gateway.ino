@@ -33,6 +33,15 @@ struct data_packet {
 };
 data_packet packet;  // the received data_packet, which may be transmitted
 
+// contents of one lcd screen
+struct screen {
+  String sender;
+  payload_struct payload;
+};
+const int LENGTH_OF_SCREEN_ARR = 4; // number of different screens, which equals the number of nodes from which some of the transmitted data will be stored
+screen screen_arr[LENGTH_OF_SCREEN_ARR];
+int screen_arr_index_counter_rotary_encoder = 0;
+int screen_arr_index_counter_free_space_in_arr = 0;
 
 /**
  * Stores the given data_packet id.
@@ -92,6 +101,71 @@ bool is_this_module_addressee_of_data_packet(String addressee_of_pkt) {
 }
 
 /**
+ * Returns the index in the screen_arr where the payload of the given sender is stored.
+ *
+ * @param sen sender, which payload may be stored in the screen_arr
+ * @return index of the payload in screen_arr of given sender, if sender is not in screen_arr -1 will be returned
+ */
+int get_index_of_screen_in_screen_arr_from_sender(String sen) {
+  int result = -1;
+
+  for (int i=0; i < LENGTH_OF_SCREEN_ARR; i++) {
+    if (screen_arr[i].sender == sen) {
+      result = i;
+      break;
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Stores temp, hum and, if the sender is new, the sender of the given data_packet. 
+ * No data of the given data_packet will be stored if the screen_arr is full.
+ *
+ * @param pkt data_packet, which contents may be stored in the screen_arr
+ */
+void store_data_from_data_packet_to_screen_arr(data_packet pkt) {
+  int index_in_screen_arr = get_index_of_screen_in_screen_arr_from_sender(pkt.sender);
+
+  if(index_in_screen_arr != -1) { // if sender is already known
+    screen_arr[index_in_screen_arr].payload.temp = pkt.payload.temp;
+    screen_arr[index_in_screen_arr].payload.hum = pkt.payload.hum;
+    
+  }
+  else if(screen_arr_index_counter_free_space_in_arr != LENGTH_OF_SCREEN_ARR) { // if sender is new and the screen_arr is not full
+    screen_arr[screen_arr_index_counter_free_space_in_arr].sender =  pkt.sender;
+    screen_arr[screen_arr_index_counter_free_space_in_arr].payload.temp = pkt.payload.temp;
+    screen_arr[screen_arr_index_counter_free_space_in_arr].payload.hum = pkt.payload.hum;
+
+    screen_arr_index_counter_free_space_in_arr++;
+  }
+}
+
+/**
+ * Shows the payload and its initial sender on the i2c lcd screen.
+ * The parameter index_of_screen_content must be smaller than LENGTH_OF_SCREEN_ARR.
+ *
+ * @param index_of_screen_content index in the screen_arr, where the data, which needs to be shown, is stored
+ */
+void show_lcd_screen_of_a_payload(int index_of_screen_content) {
+  screen scr = screen_arr[index_of_screen_content];
+
+  lcd.clear();
+
+  lcd.setCursor(0, 0);
+  lcd.print("S: ");
+  lcd.print(scr.sender);
+
+  lcd.setCursor(0, 1);
+  lcd.print("T:");
+  lcd.print(scr.payload.temp);
+  lcd.print("  ");
+  lcd.print("H:");
+  lcd.print(scr.payload.hum);
+}
+
+/**
  * Returns feedback about the received data_packet.
  * Can be used as a callback function if data was received.
  *
@@ -110,18 +184,7 @@ void if_data_packet_received(uint8_t* addr, uint8_t* data, uint8_t received_byte
   if (is_this_module_addressee_of_data_packet(packet.addressee) and not is_data_packet_id_known(packet.data_packet_id)) {
     store_data_packet_id(packet.data_packet_id);
 
-    lcd.clear();
-
-    lcd.setCursor(0, 0);
-    lcd.print("S: ");
-    lcd.print(packet.sender);
-
-    lcd.setCursor(0, 1);
-    lcd.print("T:");
-    lcd.print(packet.payload.temp);
-    lcd.print("  ");
-    lcd.print("H:");
-    lcd.print(packet.payload.hum);
+    store_data_from_data_packet_to_screen_arr(packet);
   }
 }
 

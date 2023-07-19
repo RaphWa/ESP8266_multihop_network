@@ -13,6 +13,10 @@ const int MAX_LENGTH_DATA_PACKET_ID_ARR = 100;
 long data_packet_id_arr[MAX_LENGTH_DATA_PACKET_ID_ARR];
 int data_packet_id_arr_index_counter = 0;
 
+// to emulate parallel working
+const unsigned long MINIMUM_DISTANCE_BETWEEN_SCREENS = 3000;  // in milliseconds
+unsigned long old_millis = 0;
+
 // other constants and variables
 const int DELAY_LED_BLINKEN = 50;  // in milliseconds
 const String MODUL_NAME = "G01";   // the name of this modul, it is a equivalent to an ip address
@@ -41,6 +45,7 @@ struct screen {
 const int LENGTH_OF_SCREEN_ARR = 4; // number of different screens, which equals the number of nodes from which some of the transmitted data will be stored
 screen screen_arr[LENGTH_OF_SCREEN_ARR];
 int screen_arr_index_counter_free_space_in_arr = 0;
+int screen_arr_index_counter = 0;
 
 /**
  * Stores the given data_packet id.
@@ -165,10 +170,35 @@ void show_lcd_screen_of_a_payload(int index_of_screen_content) {
 }
 
 /**
+ * Shows the next screen on the i2c lcd screen.
+ */
+void show_next_screen() {
+  if (screen_arr_index_counter == LENGTH_OF_SCREEN_ARR){
+    screen_arr_index_counter = 0;
+  }
+
+  if (screen_arr_index_counter < screen_arr_index_counter_free_space_in_arr){
+    show_lcd_screen_of_a_payload(screen_arr_index_counter);
+    screen_arr_index_counter++;
+  }
+  else{ // start from the beginning if all non free spaces have been shown
+    screen_arr_index_counter = 0;
+    if (screen_arr[0].sender != "") { //if first entry is not empty
+      show_lcd_screen_of_a_payload(screen_arr_index_counter);
+      screen_arr_index_counter++;
+    }
+  }
+  Serial.print("screen_arr_index_counter: ");
+  Serial.println(screen_arr_index_counter);
+  Serial.print("screen_arr_index_counter_free_space_in_arr: ");
+  Serial.println(screen_arr_index_counter_free_space_in_arr);
+}
+
+/**
  * Returns feedback about the received data_packet.
  * Can be used as a callback function if data was received.
  *
- * @param addr ?
+ * @param addr questionmark
  * @param data received data, should be a data_packet
  * @param received_bytes size of the received data
  */
@@ -220,8 +250,14 @@ void setup() {
 }
 
 /**
- * Empty method.
+ * Loops through all screens.
  */
 void loop() {
+  unsigned long difference = millis() - old_millis;
 
+  if (difference == MINIMUM_DISTANCE_BETWEEN_SCREENS) {
+    show_next_screen();
+    
+    old_millis = millis();
+  }
 }

@@ -11,7 +11,7 @@ long data_packet_id_arr[MAX_LENGTH_DATA_PACKET_ID_ARR];
 int data_packet_id_arr_index_counter = 0;
 
 // to emulate parallel working
-const unsigned long DISTANCE_BETWEEN_TRANSMITTING_DATA_PACKETS = 2000;  // in milliseconds
+const unsigned long MINIMUM_DISTANCE_BETWEEN_TRANSMITTING_DATA_PACKETS = 2000;  // in milliseconds
 unsigned long old_millis = 0;
 
 // other constants and variables
@@ -212,6 +212,8 @@ void if_data_packet_received(uint8_t* addr, uint8_t* data, uint8_t received_byte
  * Sets up the module on which this code is running.
  */
 void setup() {
+  randomSeed(1); // seed should vary between nodes
+
   WiFi.mode(WIFI_STA);
 
   // needed in order to give feedback
@@ -233,19 +235,20 @@ void setup() {
 }
 
 /**
- * Can transmit a new data_packet every DISTANCE_BETWEEN_TRANSMITTING_DATA_PACKETS
+ * Can transmit a new data_packet every MINIMUM_DISTANCE_BETWEEN_TRANSMITTING_DATA_PACKETS
  * milliseconds to the broadcast_address.
  */
 void loop() {
   unsigned long difference = millis() - old_millis;
+  long needed_distance = MINIMUM_DISTANCE_BETWEEN_TRANSMITTING_DATA_PACKETS + random(50, 2001);
 
-  if (difference == DISTANCE_BETWEEN_TRANSMITTING_DATA_PACKETS) {
+  if (difference == needed_distance) {
     float new_temp = random(10.0, 31.0);
     float new_hum = random(35.0, 71.0);
-
+    
     payload_struct new_pyld = { new_temp, new_hum };
 
-    //transmit_new_data_packet("G01", new_pyld);
+    transmit_new_data_packet("G01", new_pyld);
 
     old_millis = millis();
   }

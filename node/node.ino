@@ -1,6 +1,7 @@
 #include <ESP8266WiFi.h>
 #include <espnow.h>
 
+//-----variables-----
 // pins
 const int ESP8266_LED = 2;   // LED of ESP8266
 const int NODEMCU_LED = 16;  // LED of NodeMCU
@@ -18,14 +19,32 @@ unsigned long old_millis = 0;
 const int DELAY_LED_BLINKEN = 50;  // in milliseconds
 const String MODUL_NAME = "N01";   // the name of this modul, it is a equivalent to an ip address
 uint8_t broadcast_address[] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+//-----variables-----
 
-// the structure of the payload of a data_packet
+//-----structs-----
+/*
+ * This structure contains the metadata of a data_packet
+ * and represents the head of the data_packet.
+ */
+struct head_struct {
+  unsigned long data_packet_id;
+  String sender;
+  String addressee;
+}
+
+/*
+ * This structure contains the payload of a data_packet
+ * and represents the body of the data_packet.
+ */
 struct payload_struct {
   float temp;  // temperature
-  float hum;   // humidity
+  float humi;   // humidity
 };
 
-// the sructure of the received and transmitted data_packet
+/*
+ * This structure represents a data packet
+ * which can be received and transmitted.
+ */
 struct data_packet {
   unsigned long data_packet_id;
   String sender;
@@ -33,7 +52,7 @@ struct data_packet {
   payload_struct payload;
 };
 data_packet packet;  // the received data_packet, which may be transmitted
-
+//-----structs-----
 
 /**
  * Stores the given data_packet id.
@@ -146,8 +165,8 @@ void transmit_new_data_packet(String addr_name, payload_struct pyld) {
   Serial.println("Transmitted payload: ");
   Serial.print("Temp: ");
   Serial.print(pkt.payload.temp);
-  Serial.print("C, Hum: ");
-  Serial.print(pkt.payload.hum);
+  Serial.print("C, humi: ");
+  Serial.print(pkt.payload.humi);
   Serial.println("%");
 
   digitalWrite(NODEMCU_LED, HIGH);
@@ -192,8 +211,8 @@ void if_data_packet_received(uint8_t* addr, uint8_t* data, uint8_t received_byte
   Serial.println("Received payload: ");
   Serial.print("Temp: ");
   Serial.print(packet.payload.temp);
-  Serial.print("C, Hum: ");
-  Serial.print(packet.payload.hum);
+  Serial.print("C, humi: ");
+  Serial.print(packet.payload.humi);
   Serial.println("%");
   delay(DELAY_LED_BLINKEN);
   digitalWrite(ESP8266_LED, LOW);
@@ -208,8 +227,9 @@ void if_data_packet_received(uint8_t* addr, uint8_t* data, uint8_t received_byte
   }
 }
 
+//-----setup and loop-----
 /**
- * Sets up the module on which this code is running.
+ * Init
  */
 void setup() {
   WiFi.mode(WIFI_STA);
@@ -240,13 +260,14 @@ void loop() {
   unsigned long difference = millis() - old_millis;
 
   if (difference == MINIMUM_DISTANCE_BETWEEN_TRANSMITTING_DATA_PACKETS) {
-    float new_temp = random(10.0, 31.0);
-    float new_hum = random(35.0, 71.0);
+    float new_temp = random(10.0, 31.0); // TODO get real data
+    float new_humi = random(35.0, 71.0); // TODO get real data
     
-    payload_struct new_pyld = { new_temp, new_hum };
+    payload_struct new_pyld = { new_temp, new_humi };
 
     transmit_new_data_packet("G01", new_pyld);
 
     old_millis = millis();
   }
 }
+//-----setup and loop-----

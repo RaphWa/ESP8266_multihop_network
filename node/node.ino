@@ -1,10 +1,14 @@
 #include <ESP8266WiFi.h>
 #include <espnow.h>
+#include <DHT.h>
 
 //-----variables-----
 // pins
 const int ESP8266_LED = 2;   // LED of ESP8266
 const int NODEMCU_LED = 16;  // LED of NodeMCU
+#define DHTPIN 5
+#define DHTTYPE DHT22
+DHT dht(DHTPIN, DHTTYPE);
 
 // to keep track of known data_packet IDs
 const int MAX_LENGTH_DATA_PACKET_ID_ARR = 100;
@@ -12,7 +16,7 @@ long data_packet_id_arr[MAX_LENGTH_DATA_PACKET_ID_ARR];
 int data_packet_id_arr_index_counter = 0;
 
 // to emulate parallel working
-const unsigned long MINIMUM_DISTANCE_BETWEEN_TRANSMITTING_DATA_PACKETS = 10000;  // in milliseconds
+const unsigned long MINIMUM_DISTANCE_BETWEEN_TRANSMITTING_DATA_PACKETS = 5000;  // in milliseconds, must be at least 2000 due to DHT22
 unsigned long old_millis = 0;
 
 // other constants and variables
@@ -231,6 +235,8 @@ void if_data_packet_received(uint8_t* addr, uint8_t* data, uint8_t received_byte
  * Initialization of the module.
  */
 void setup() {
+  dht.begin();
+
   WiFi.mode(WIFI_STA);
 
   // needed in order to give feedback
@@ -261,13 +267,10 @@ void setup() {
 void loop() {
   unsigned long difference = millis() - old_millis;
 
-  if (difference == MINIMUM_DISTANCE_BETWEEN_TRANSMITTING_DATA_PACKETS) {
-    float new_temp = random(10.0, 31.0); // TODO get real data
-    float new_humi = random(35.0, 71.0); // TODO get real data
-    
-    payload_struct new_pyld = { new_temp, new_humi };
+  if (difference == MINIMUM_DISTANCE_BETWEEN_TRANSMITTING_DATA_PACKETS) { 
+    payload_struct new_pyld = { dht.readTemperature(), dht.readHumidity() };
 
-    // transmit_new_data_packet("G01", new_pyld); // TODO uncomment
+    transmit_new_data_packet("G01", new_pyld);
 
     old_millis = millis();
   }

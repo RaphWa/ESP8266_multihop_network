@@ -12,7 +12,7 @@ long data_packet_id_arr[MAX_LENGTH_DATA_PACKET_ID_ARR];
 int data_packet_id_arr_index_counter = 0;
 
 // to emulate parallel working
-const unsigned long MINIMUM_DISTANCE_BETWEEN_TRANSMITTING_DATA_PACKETS = 2000;  // in milliseconds
+const unsigned long MINIMUM_DISTANCE_BETWEEN_TRANSMITTING_DATA_PACKETS = 10000;  // in milliseconds
 unsigned long old_millis = 0;
 
 // other constants and variables
@@ -30,7 +30,7 @@ struct head_struct {
   unsigned long data_packet_id;
   String sender;
   String addressee;
-}
+};
 
 /*
  * This structure contains the payload of a data_packet
@@ -38,7 +38,7 @@ struct head_struct {
  */
 struct payload_struct {
   float temp;  // temperature
-  float humi;   // humidity
+  float humi;  // humidity
 };
 
 /*
@@ -46,9 +46,7 @@ struct payload_struct {
  * which can be received and transmitted.
  */
 struct data_packet {
-  unsigned long data_packet_id;
-  String sender;
-  String addressee;
+  head_struct head;
   payload_struct payload;
 };
 data_packet packet;  // the received data_packet, which may be transmitted
@@ -120,8 +118,8 @@ bool is_this_module_addressee_of_data_packet(String addressee_of_pkt) {
 bool is_data_packet_allowed_to_be_transmitted(data_packet pkt) {
   bool result = false;
 
-  bool id_is_know = is_data_packet_id_known(pkt.data_packet_id);
-  bool is_modul_addressee = is_this_module_addressee_of_data_packet(pkt.addressee);
+  bool id_is_know = is_data_packet_id_known(pkt.head.data_packet_id);
+  bool is_modul_addressee = is_this_module_addressee_of_data_packet(pkt.head.addressee);
 
   if (not id_is_know and not is_modul_addressee) {
     result = true;
@@ -136,7 +134,7 @@ bool is_data_packet_allowed_to_be_transmitted(data_packet pkt) {
  * @param pkt data_packet which needs to be transmitted
  */
 void transmit_data_packet(data_packet pkt) {
-  store_data_packet_id(pkt.data_packet_id);
+  store_data_packet_id(pkt.head.data_packet_id);
 
   // transmit data_packet
   esp_now_set_self_role(ESP_NOW_ROLE_CONTROLLER);
@@ -225,11 +223,12 @@ void if_data_packet_received(uint8_t* addr, uint8_t* data, uint8_t received_byte
     delay(DELAY_LED_BLINKEN);
     digitalWrite(NODEMCU_LED, LOW);
   }
+  Serial.println("-----------------------------");
 }
 
 //-----setup and loop-----
 /**
- * Init
+ * Initialization of the module.
  */
 void setup() {
   WiFi.mode(WIFI_STA);
@@ -250,6 +249,9 @@ void setup() {
   esp_now_register_recv_cb(if_data_packet_received);
   esp_now_register_send_cb(if_data_packet_transmitted);
   esp_now_add_peer(broadcast_address, ESP_NOW_ROLE_SLAVE, 1, NULL, 0);
+
+  // initialization finished, send feedback
+  Serial.println("--Initialization finished--");
 }
 
 /**
@@ -265,7 +267,7 @@ void loop() {
     
     payload_struct new_pyld = { new_temp, new_humi };
 
-    transmit_new_data_packet("G01", new_pyld);
+    // transmit_new_data_packet("G01", new_pyld); // TODO uncomment
 
     old_millis = millis();
   }

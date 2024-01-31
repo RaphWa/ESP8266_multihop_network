@@ -90,27 +90,13 @@ bool is_data_packet_id_known(int id) {
 }
 
 /**
- * Checks if the given address equals modul_name or if the first and only letter of the given address 
- * equals the first letter of modul_name.
+ * Checks if the given address equals modul_name.
  *
  * @param addressee_of_pkt addressee of the data_packet
  * @return true if module is addressee of the data_packet, otherwise false 
  */
 bool is_this_module_addressee_of_data_packet(String addressee_of_pkt) {
-  bool result = false;
-
-  char first_letter_of_module_name = modul_name.charAt(0);
-  char first_letter_of_addressee_of_pkt = addressee_of_pkt.charAt(0);
-
-  if (addressee_of_pkt.equals(modul_name)) {
-    result = true;
-  }
-
-  if ((addressee_of_pkt.length() == 1) and (first_letter_of_module_name == first_letter_of_addressee_of_pkt)) {
-    result = true;
-  }
-
-  return result;
+  return addressee_of_pkt.equals(modul_name);
 }
 
 /**
@@ -182,7 +168,7 @@ void transmit_new_data_packet(String addr_name, payload_struct pyld) {
  * Returns feedback whether the transmission was successful or not.
  * Can be used as a callback function if data was transmitted.
  *
- * @param addr addressee of the transmission
+ * @param addr addressee of the transmission ? TODO not sure
  * @param status status of the transmission
  */
 void if_data_packet_transmitted(uint8_t* addr, uint8_t status) {
@@ -198,7 +184,7 @@ void if_data_packet_transmitted(uint8_t* addr, uint8_t status) {
  * Returns feedback about the received data_packet.
  * Can be used as a callback function if data was received.
  *
- * @param addr ?
+ * @param addr mac adress of sender ? TODO not sure
  * @param data received data, should be a data_packet
  * @param received_bytes size of the received data
  */
@@ -210,6 +196,8 @@ void if_data_packet_received(uint8_t* addr, uint8_t* data, uint8_t received_byte
   Serial.println("-----------------------------");
   Serial.print("Received bytes: ");
   Serial.println(received_bytes);
+  Serial.print("Address: ");
+  Serial.println(*addr);
   Serial.println("Received payload: ");
   Serial.print("Temp: ");
   Serial.print(packet.payload.temp);
@@ -271,7 +259,7 @@ void loop() {
   if (difference == MINIMUM_DISTANCE_BETWEEN_TRANSMITTING_DATA_PACKETS) { 
     payload_struct new_pyld = { dht.readTemperature(), dht.readHumidity() };
 
-    transmit_new_data_packet("G01", new_pyld);
+    // transmit_new_data_packet("G01", new_pyld);  // TODO uncomment
 
     old_millis = millis();
   }

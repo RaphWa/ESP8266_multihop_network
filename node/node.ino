@@ -16,7 +16,7 @@ long data_packet_id_arr[MAX_LENGTH_DATA_PACKET_ID_ARR];
 int data_packet_id_arr_index_counter = 0;
 
 // to emulate parallel working
-const unsigned long MINIMUM_DISTANCE_BETWEEN_TRANSMITTING_DATA_PACKETS = 5000 + random(10, 1000);  // in milliseconds, must be at least 2000 due to DHT22
+const unsigned long MINIMUM_DISTANCE_BETWEEN_TRANSMITTING_DATA_PACKETS = 10000 + random(10, 2000);  // in milliseconds, must be at least 2000 due to DHT22
 unsigned long old_millis = 0;
 
 // other constants and variables
@@ -108,10 +108,10 @@ bool is_this_module_addressee_of_data_packet(String addressee_of_pkt) {
 bool is_data_packet_allowed_to_be_transmitted(data_packet pkt) {
   bool result = false;
 
-  bool id_is_know = is_data_packet_id_known(pkt.head.data_packet_id);
+  bool id_is_known = is_data_packet_id_known(pkt.head.data_packet_id);
   bool is_modul_addressee = is_this_module_addressee_of_data_packet(pkt.head.addressee);
 
-  if (not id_is_know and not is_modul_addressee) {
+  if (not id_is_known and not is_modul_addressee) {
     result = true;
   }
 
@@ -168,7 +168,7 @@ void transmit_new_data_packet(String addr_name, payload_struct pyld) {
  * Returns feedback whether the transmission was successful or not.
  * Can be used as a callback function if data was transmitted.
  *
- * @param addr addressee of the transmission ? TODO not sure
+ * @param addr ?
  * @param status status of the transmission
  */
 void if_data_packet_transmitted(uint8_t* addr, uint8_t status) {
@@ -184,7 +184,7 @@ void if_data_packet_transmitted(uint8_t* addr, uint8_t status) {
  * Returns feedback about the received data_packet.
  * Can be used as a callback function if data was received.
  *
- * @param addr mac adress of sender ? TODO not sure
+ * @param addr ?
  * @param data received data, should be a data_packet
  * @param received_bytes size of the received data
  */
@@ -259,7 +259,7 @@ void loop() {
   if (difference == MINIMUM_DISTANCE_BETWEEN_TRANSMITTING_DATA_PACKETS) { 
     payload_struct new_pyld = { dht.readTemperature(), dht.readHumidity() };
 
-    // transmit_new_data_packet("G01", new_pyld);  // TODO uncomment
+    transmit_new_data_packet("G01", new_pyld);
 
     old_millis = millis();
   }

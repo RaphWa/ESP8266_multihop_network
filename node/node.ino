@@ -7,6 +7,7 @@
 const int ESP8266_LED = 2;   // LED of ESP8266
 const int NODEMCU_LED = 16;  // LED of NodeMCU
 uint8_t DHTPIN = 5;       // can also be #define DHTPIN 5
+
 uint8_t DHTTYPE = DHT22;  // can also be #define DHTTYPE DHT22
 DHT dht(DHTPIN, DHTTYPE);
 
@@ -20,7 +21,7 @@ const unsigned long MINIMUM_DISTANCE_BETWEEN_TRANSMITTING_DATA_PACKETS = 10000 +
 unsigned long old_millis = 0;
 
 // other constants and variables
-const int DELAY_LED_BLINKEN = 50;  // in milliseconds
+const int DELAY_LED_BLINK = 50;  // in milliseconds
 String modul_name = "Node";   // the name of this modul, it is used as a equivalent to an ip address
 uint8_t broadcast_address[] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
 //-----variables-----
@@ -159,7 +160,7 @@ void transmit_new_data_packet(String addr_name, payload_struct pyld) {
   Serial.println("%");
 
   digitalWrite(NODEMCU_LED, HIGH);
-  delay(DELAY_LED_BLINKEN);
+  delay(DELAY_LED_BLINK);
   digitalWrite(NODEMCU_LED, LOW);
 
   Serial.println("-----");
@@ -208,7 +209,7 @@ void if_data_packet_received(uint8_t* addr, uint8_t* data, uint8_t received_byte
   Serial.print("C, humi: ");
   Serial.print(packet.payload.humi);
   Serial.println("%");
-  delay(DELAY_LED_BLINKEN);
+  delay(DELAY_LED_BLINK);
   digitalWrite(ESP8266_LED, LOW);
 
   if (is_data_packet_allowed_to_be_transmitted(packet)) {
@@ -216,7 +217,7 @@ void if_data_packet_received(uint8_t* addr, uint8_t* data, uint8_t received_byte
     transmit_data_packet(packet);
     Serial.println("Transmitted!");
     digitalWrite(NODEMCU_LED, HIGH);
-    delay(DELAY_LED_BLINKEN);
+    delay(DELAY_LED_BLINK);
     digitalWrite(NODEMCU_LED, LOW);
   }
   Serial.println("-----------------------------");

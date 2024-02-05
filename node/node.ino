@@ -142,7 +142,8 @@ void transmit_data_packet(data_packet pkt) {
 void transmit_new_data_packet(String addr_name, payload_struct pyld) {
   long new_data_packet_id = random(1, 2111222333);
 
-  data_packet pkt = { new_data_packet_id, modul_name, addr_name, pyld };
+  head_struct head_of_new_pkt = { new_data_packet_id, modul_name, addr_name};
+  data_packet pkt = { head_of_new_pkt, pyld };
 
   Serial.println("-----");
 
@@ -172,6 +173,9 @@ void transmit_new_data_packet(String addr_name, payload_struct pyld) {
  * @param status status of the transmission
  */
 void if_data_packet_transmitted(uint8_t* addr, uint8_t status) {
+  Serial.print("Packet transmitted to: ");
+  Serial.println(*addr);
+
   Serial.print("Status of transmitted data_packet: ");
   if (status == 0) {
     Serial.println("Success");

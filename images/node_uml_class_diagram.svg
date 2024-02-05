@@ -17,7 +17,7 @@
     <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:monospace;font-style:normal;font-weight:normal" x="46" y="290.2"> data_packet_id_arr_index_counter: int = 0</text>
     <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:monospace;font-style:normal;font-weight:normal" x="46" y="306.2"> MINIMUM_DISTANCE_BETWEEN_TRANSMITTING_DATA_PACKETS : const unsigned long</text>
     <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:monospace;font-style:normal;font-weight:normal" x="46" y="322.2"> old_millis: unsigned long</text>
-    <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:monospace;font-style:normal;font-weight:normal" x="46" y="338.2"> DELAY_LED_BLINKEN: const int = 50</text>
+    <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:monospace;font-style:normal;font-weight:normal" x="46" y="338.2"> DELAY_LED_BLINK: const int = 50</text>
     <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:monospace;font-style:normal;font-weight:normal" x="46" y="354.2"> modul_name: String</text>
     <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:monospace;font-style:normal;font-weight:normal" x="46" y="370.2"> broadcast_address: uint8_t[] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF }</text>
     <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:monospace;font-style:normal;font-weight:normal" x="46" y="386.2"> packet: data_packet</text>

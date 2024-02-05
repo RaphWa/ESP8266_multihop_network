@@ -6,8 +6,8 @@
 // pins
 const int ESP8266_LED = 2;   // LED of ESP8266
 const int NODEMCU_LED = 16;  // LED of NodeMCU
-#define DHTPIN 5
-#define DHTTYPE DHT22
+uint8_t DHTPIN = 5;       // can also be #define DHTPIN 5
+uint8_t DHTTYPE = DHT22;  // can also be #define DHTTYPE DHT22
 DHT dht(DHTPIN, DHTTYPE);
 
 // to keep track of known data_packet IDs
@@ -76,7 +76,7 @@ void store_data_packet_id(long id) {
  * @param id data_packet id, which may be known
  * @return true if given data_packet id is known, otherwise false
  */
-bool is_data_packet_id_known(int id) {
+bool is_data_packet_id_known(long id) {
   bool result = false;
 
   for (int i = 0; i < MAX_LENGTH_DATA_PACKET_ID_ARR; i++) {

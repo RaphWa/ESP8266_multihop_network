@@ -21,8 +21,11 @@ As shown in the table above, the DHT22 is beeing supplied with a 3,3 V and the D
 ### Software of the node
 The software of a node can be found within the folder called [node](https://github.com/RaphWa/ESP8266_multihop_network/blob/main/node). It is written in C/C++ and the Arduino IDE was beeing used to do so. Three librarys have been used within this software: ESP8266WiFi, [espnow](https://github.com/esp8266/Arduino/blob/master/tools/sdk/include/espnow.h) and [DHT](https://github.com/adafruit/DHT-sensor-library).
 In general, the node waits until a specified number has been reached. If this is the case it gathers the temperature data and humidity data and sends it to the broadcast address and resets a counter variable. While it waits it listens for packets. If a packet has been reiceived by the node it checks if it should be retransmitted. If the reiceved packet is eligible for retransmission the node will try to do so to the broadcast address. If not the packet will not be retransmited. 
-The following diagram shows the software of the node represented as a class diagram.
+The following diagram shows the software of the node represented as a UML class diagram.
+
 ![node_uml_class_diagram](https://github.com/RaphWa/ESP8266_multihop_network/blob/main/images/node_uml_class_diagram.svg)
+
+On the right side of the node class are the three structs displayed. The head_struct consists out of three variables and contains general information about the packet. The payload_struct consists out of two variables, which store a temperature value and a humidity value. The struct data_packet consists out of two variables, one variable is of the type head_struct and the other variable is the type of payload_struct. This struct represents the packet, which is beeing send between the modules.
 
 ## Ideas for a gateway
 Currently, the inital idea of a NodeMCU ESP8266 with a LCD1602 with an I2C-Interface as a gateway, called G01, has been abandon. In the following text are a few ideas for a gateway:
